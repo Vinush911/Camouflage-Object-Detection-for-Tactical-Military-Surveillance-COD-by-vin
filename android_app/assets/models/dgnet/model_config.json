@@ -1,0 +1,12 @@
+{
+  "model_name": "DGNet-S",
+  "task": "segmentation",
+  "input_width": 384,
+  "input_height": 384,
+  "input_channels": 3,
+  "input_type": "float32",
+  "normalization": "zero_to_one",
+  "output_activation": "none",
+  "threshold": 0.30,
+  "min_region_area": 120
+}

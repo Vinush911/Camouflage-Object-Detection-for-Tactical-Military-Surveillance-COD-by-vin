@@ -1,0 +1,13 @@
+{
+  "model_name": "Target Classifier",
+  "task": "classification",
+  "input_width": 224,
+  "input_height": 224,
+  "input_channels": 3,
+  "input_type": "float32",
+  "normalization": "zero_to_one",
+  "classes": [
+    "Soldier",
+    "Tank"
+  ]
+}

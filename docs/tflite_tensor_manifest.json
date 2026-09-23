@@ -1,0 +1,49 @@
+{
+  "model_file": "dgnet_mobilenet_v3_384.tflite",
+  "file_size_mb": 3.95,
+  "backbone": "mobilenet_v3_large",
+  "input_dimensions": [
+    384,
+    384,
+    3
+  ],
+  "inputs": [
+    {
+      "index": 0,
+      "name": "image_input",
+      "shape": [
+        1,
+        384,
+        384,
+        3
+      ],
+      "dtype": "float32",
+      "quantization": [
+        0.0,
+        0
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "index": 0,
+      "name": "Identity",
+      "shape": [
+        1,
+        384,
+        384,
+        1
+      ],
+      "dtype": "float32",
+      "quantization": [
+        0.0,
+        0
+      ]
+    }
+  ],
+  "output_range": {
+    "min": 0.22612938284873962,
+    "max": 0.3432047665119171,
+    "mean": 0.25520241260528564
+  }
+}

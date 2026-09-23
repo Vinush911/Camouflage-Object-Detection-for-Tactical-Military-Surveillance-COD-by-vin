@@ -14,8 +14,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -37,7 +37,7 @@ junit/
 .ipynb_checkpoints
 *-checkpoint.ipynb
 
-# Environments
+# Environments and secrets
 .env
 .venv
 env/
@@ -46,12 +46,43 @@ ENV/
 env.bak/
 venv.bak/
 
-# IDE / Editor Settings
+# Mobile keystores and security files
+*.keystore
+*.jks
+key.properties
+
+# IDE and Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+*.iml
+*.ipr
+*.iws
+
+# Flutter and Dart build files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# Android and Gradle build caches and outputs
+.gradle/
+.kotlin/
+local.properties
+GeneratedPluginRegistrant.java
+*.apk
+*.aab
+*.dex
+
+# Backup model copies
+*_backup.tflite
+
+# External reference repository clone
+COD-vinush-main/
 
 # Data directory contents (Tracked by DVC instead of Git)
 data/raw/*
@@ -82,3 +113,4 @@ logs/
 # OS generated files
 .DS_Store
 Thumbs.db
+

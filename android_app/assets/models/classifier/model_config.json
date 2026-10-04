@@ -1,13 +1,15 @@
 {
-  "model_name": "Target Classifier",
+  "model_name": "EfficientNet-B0 (Trained Demo Classifier)",
   "task": "classification",
   "input_width": 224,
   "input_height": 224,
   "input_channels": 3,
   "input_type": "float32",
+  "output_type": "float32",
   "normalization": "zero_to_one",
+  "is_prototype": false,
   "classes": [
-    "Soldier",
-    "Tank"
+    "Non-Target",
+    "Camouflaged Target"
   ]
 }

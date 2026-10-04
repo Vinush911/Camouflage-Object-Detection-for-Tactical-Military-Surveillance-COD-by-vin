@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:android_app/models/target_region.dart';
-import 'package:android_app/models/tracked_target.dart';
 import 'package:android_app/widgets/live_camera_overlay.dart';
 
 void main() {
@@ -49,68 +48,6 @@ void main() {
               regions: regions,
               frameWidth: 640,
               frameHeight: 480,
-            ),
-          ),
-        ),
-      );
-
-      expect(find.byType(LiveCameraOverlay), findsOneWidget);
-    });
-
-    testWidgets('Renders LiveCameraOverlay with TrackedTargets across threat color levels', (tester) async {
-      final now = DateTime.now();
-      final tracked = [
-        // 1. Amber Anomaly (55% confidence)
-        TrackedTarget(
-          trackId: 1,
-          boundingBox: const Rect.fromLTWH(20, 20, 60, 60),
-          confidence: 0.55,
-          label: 'Camouflage Target',
-          firstSeen: now,
-          lastSeen: now,
-          framesTracked: 2,
-        ),
-        // 2. Tactical Green Lock (70% confidence)
-        TrackedTarget(
-          trackId: 2,
-          boundingBox: const Rect.fromLTWH(120, 50, 80, 80),
-          confidence: 0.70,
-          label: 'Camouflage Target',
-          firstSeen: now,
-          lastSeen: now,
-          framesTracked: 5,
-        ),
-        // 3. Red Flashing High Threat (92% confidence)
-        TrackedTarget(
-          trackId: 3,
-          boundingBox: const Rect.fromLTWH(250, 80, 100, 100),
-          confidence: 0.92,
-          label: 'Camouflage Target',
-          firstSeen: now,
-          lastSeen: now,
-          framesTracked: 10,
-        ),
-        // 4. Amber Occluded / Searching Target
-        TrackedTarget(
-          trackId: 4,
-          boundingBox: const Rect.fromLTWH(100, 200, 50, 50),
-          confidence: 0.85,
-          label: 'Camouflage Target',
-          firstSeen: now,
-          lastSeen: now,
-          framesTracked: 3,
-          isOccluded: true,
-        ),
-      ];
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: LiveCameraOverlay(
-              trackedTargets: tracked,
-              frameWidth: 640,
-              frameHeight: 480,
-              pulseValue: 0.85,
             ),
           ),
         ),

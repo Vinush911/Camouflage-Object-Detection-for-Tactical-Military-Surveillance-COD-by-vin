@@ -41,7 +41,6 @@ dependencies:
   path_provider: ^2.1.4
   permission_handler: ^11.3.1
   device_info_plus: ^10.1.2
-  audioplayers: ^6.6.0
 
 dev_dependencies:
   flutter_test:
@@ -54,10 +53,11 @@ flutter:
   assets:
     - assets/models/dgnet/
     - assets/models/classifier/
-    - assets/sounds/
     # Standalone model files kept for reference and future fallback use
     - assets/models/dgnet_s_int8.tflite
+    - assets/models/dgnet_s_int8_backup.tflite
     - assets/models/dgnet_mobilenet_v3_384.tflite
+    - assets/models/dgnet_best_fp16.tflite
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

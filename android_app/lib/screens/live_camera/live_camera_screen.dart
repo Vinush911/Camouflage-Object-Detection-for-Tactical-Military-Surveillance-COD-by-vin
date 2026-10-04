@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import '../../camera/live_inference_controller.dart';
 import '../../widgets/live_camera_overlay.dart';
 
-// Live camera surveillance mode with real-time camouflaged object detection.
-// Integrates live targeting overlay, live confidence slider, CPU thread controls,
-// and real-time telemetry (FPS, Latency, RAM) inspired by the reference application.
-
+// Live camera screen for basic camouflage object detection.
+// Shows real-time camera view, detection bounding boxes, confidence slider,
+// CPU thread controls, and performance metrics (latency, FPS, RAM).
 class LiveCameraScreen extends StatefulWidget {
   const LiveCameraScreen({super.key});
 
@@ -15,12 +14,8 @@ class LiveCameraScreen extends StatefulWidget {
   State<LiveCameraScreen> createState() => _LiveCameraScreenState();
 }
 
-class _LiveCameraScreenState extends State<LiveCameraScreen>
-    with SingleTickerProviderStateMixin {
+class _LiveCameraScreenState extends State<LiveCameraScreen> {
   late final LiveInferenceController _controller;
-  late final AnimationController _pulseController;
-  late final Animation<double> _pulseAnimation;
-
   bool _showControls = true;
 
   @override
@@ -28,19 +23,10 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
     super.initState();
     _controller = LiveInferenceController();
     _controller.initializeCamera();
-
-    // Blinking animation for the live feed indicator dot
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    )..repeat(reverse: true);
-
-    _pulseAnimation = Tween<double>(begin: 0.2, end: 1.0).animate(_pulseController);
   }
 
   @override
   void dispose() {
-    _pulseController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -63,7 +49,10 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                     SizedBox(height: 16),
                     Text(
                       'Initializing camera sensor...',
-                      style: TextStyle(color: Colors.white70, fontFamily: 'monospace'),
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                   ],
                 ),
@@ -77,17 +66,29 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.no_photography_outlined, size: 64, color: Colors.orange),
+                      const Icon(
+                        Icons.no_photography_outlined,
+                        size: 64,
+                        color: Colors.orange,
+                      ),
                       const SizedBox(height: 16),
                       const Text(
                         'Camera Permission Required',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _controller.errorMessage ?? 'Please enable camera permission in device settings.',
+                        _controller.errorMessage ??
+                            'Please enable camera permission in device settings.',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white70, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
@@ -111,12 +112,19 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         _controller.errorMessage ?? 'An error occurred.',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -126,7 +134,9 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
 
             final camController = _controller.cameraController;
             if (camController == null || !camController.value.isInitialized) {
-              return const Center(child: CircularProgressIndicator(color: Color(0xFF00FF41)));
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFF00FF41)),
+              );
             }
 
             final regions = _controller.currentResult?.regions ?? const [];
@@ -134,62 +144,61 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
             return Stack(
               fit: StackFit.expand,
               children: [
-                // 1. Live Camera Preview (Aspect Fill)
+                // 1. Live Camera Preview
                 Center(
                   child: CameraPreview(camController),
                 ),
 
-                // 2. Tactical Live Targeting Overlay (Corner brackets, labels, crosshair, threat pulsing)
+                // 2. Basic Detection Overlay (bounding boxes and labels)
                 Positioned.fill(
-                  child: AnimatedBuilder(
-                    animation: _pulseAnimation,
-                    builder: (context, _) {
-                      return LiveCameraOverlay(
-                        regions: regions,
-                        trackedTargets: _controller.trackedTargets,
-                        frameWidth: _controller.frameWidth,
-                        frameHeight: _controller.frameHeight,
-                        showFraming: true,
-                        pulseValue: _pulseAnimation.value,
-                      );
-                    },
+                  child: LiveCameraOverlay(
+                    regions: regions,
+                    frameWidth: _controller.frameWidth,
+                    frameHeight: _controller.frameHeight,
+                    showFraming: true,
                   ),
                 ),
 
-                // 3. Top Tactical Status Bar (FEED // ACTIVE, Target Count, Close button)
+                // 3. Top Status Bar (Feed state, target count, toggle controls)
                 Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     color: const Color(0xCC000000),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         // Back Button
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                           onPressed: () => Navigator.pop(context),
                         ),
 
-                        // Blinking Live Dot and Feed Status
+                        // Feed Status
                         Row(
                           children: [
-                            FadeTransition(
-                              opacity: _pulseAnimation,
-                              child: Container(
-                                width: 9,
-                                height: 9,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFFF2D55), // Tactical Red
-                                  shape: BoxShape.circle,
-                                ),
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: _controller.isStreaming
+                                    ? const Color(0xFF00FF41)
+                                    : Colors.orange,
+                                shape: BoxShape.circle,
                               ),
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              _controller.isStreaming ? 'FEED // ACTIVE' : 'FEED // PAUSED',
+                              _controller.isStreaming ? 'LIVE' : 'PAUSED',
                               style: TextStyle(
                                 color: _controller.isStreaming
                                     ? const Color(0xFF00FF41)
@@ -202,7 +211,7 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                           ],
                         ),
 
-                        // Targets Count Badge
+                        // Targets Count Badge and Controls Toggle
                         Row(
                           children: [
                             const Text(
@@ -215,11 +224,7 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                               ),
                             ),
                             Text(
-                              (_controller.trackedTargets.isNotEmpty
-                                      ? _controller.trackedTargets.length
-                                      : regions.length)
-                                  .toString()
-                                  .padLeft(2, '0'),
+                              regions.length.toString().padLeft(2, '0'),
                               style: const TextStyle(
                                 color: Color(0xFF00FF41),
                                 fontSize: 13,
@@ -227,31 +232,19 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                                 fontFamily: 'monospace',
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            // Audio Radar Ping Mute Button
+                            const SizedBox(width: 8),
                             IconButton(
                               icon: Icon(
-                                _controller.isAudioMuted
-                                    ? Icons.volume_off
-                                    : Icons.volume_up,
-                                color: _controller.isAudioMuted
-                                    ? Colors.white54
-                                    : const Color(0xFF00FF41),
-                                size: 18,
-                              ),
-                              tooltip: _controller.isAudioMuted
-                                  ? 'Unmute Radar Ping'
-                                  : 'Mute Radar Ping',
-                              onPressed: () => _controller.toggleAudioMute(),
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                _showControls ? Icons.tune : Icons.tune_outlined,
+                                _showControls
+                                    ? Icons.tune
+                                    : Icons.tune_outlined,
                                 color: const Color(0xFF00FF41),
                                 size: 18,
                               ),
                               tooltip: 'Toggle Controls',
-                              onPressed: () => setState(() => _showControls = !_showControls),
+                              onPressed: () => setState(
+                                () => _showControls = !_showControls,
+                              ),
                             ),
                           ],
                         ),
@@ -282,7 +275,7 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Text(
-                              'SYSTEM CONFIGURATION',
+                              'DETECTION CONFIGURATION',
                               style: TextStyle(
                                 color: Color(0x9900FF41),
                                 fontSize: 10,
@@ -310,10 +303,14 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                                   child: SliderTheme(
                                     data: SliderTheme.of(context).copyWith(
                                       activeTrackColor: const Color(0xFF00FF41),
-                                      inactiveTrackColor: const Color(0x4000FF41),
+                                      inactiveTrackColor:
+                                          const Color(0x4000FF41),
                                       thumbColor: const Color(0xFF00FF41),
                                       overlayColor: const Color(0x2000FF41),
-                                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                                      thumbShape:
+                                          const RoundSliderThumbShape(
+                                        enabledThumbRadius: 6,
+                                      ),
                                       trackHeight: 2,
                                     ),
                                     child: Slider(
@@ -322,7 +319,9 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                                       max: 0.90,
                                       divisions: 16,
                                       onChanged: (val) {
-                                        _controller.setConfidenceThreshold(val);
+                                        _controller.setConfidenceThreshold(
+                                          val,
+                                        );
                                       },
                                     ),
                                   ),
@@ -408,7 +407,9 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                               title: 'LATENCY',
                               value: _controller.lastInferenceMs > 0
                                   ? '${_controller.lastInferenceMs.toStringAsFixed(1)} ms'
-                                  : (_controller.isStreaming ? 'Measuring...' : 'Paused'),
+                                  : (_controller.isStreaming
+                                      ? 'Measuring...'
+                                      : 'Paused'),
                               valueColor: Colors.white,
                             ),
                             _buildTelemetryColumn(
@@ -433,13 +434,15 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             icon: Icon(
-                              _controller.isStreaming ? Icons.pause : Icons.play_arrow,
+                              _controller.isStreaming
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
                               size: 18,
                             ),
                             label: Text(
                               _controller.isStreaming
-                                  ? 'PAUSE LIVE SURVEILLANCE'
-                                  : 'START LIVE SURVEILLANCE',
+                                  ? 'PAUSE LIVE DETECTION'
+                                  : 'START LIVE DETECTION',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.8,
@@ -450,7 +453,7 @@ class _LiveCameraScreenState extends State<LiveCameraScreen>
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               backgroundColor: _controller.isStreaming
-                                  ? const Color(0xFFB91C1C)
+                                  ? const Color(0xFF333333)
                                   : const Color(0xFF0F766E),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(

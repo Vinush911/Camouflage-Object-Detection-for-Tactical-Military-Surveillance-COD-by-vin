@@ -137,6 +137,7 @@ class ModelLoader {
       quantizationMode: inTensor.type.toString().contains('int') ? 'Quantized INT8' : 'Standard FP32',
       delegateType: '$hardwareDelegate ($numThreads Threads)',
       classes: config.classes,
+      isPrototype: config.isPrototype,
     );
 
     return LoadedModelPackage(

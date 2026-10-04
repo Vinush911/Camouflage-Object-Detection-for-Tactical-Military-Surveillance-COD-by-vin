@@ -22,6 +22,7 @@ class ModelMetadata {
   final String quantizationMode;
   final String delegateType;
   final List<String> classes;
+  final bool isPrototype;
   final String? errorMessage;
 
   const ModelMetadata({
@@ -37,6 +38,7 @@ class ModelMetadata {
     this.quantizationMode = 'Standard FP32',
     this.delegateType = 'CPU',
     this.classes = const [],
+    this.isPrototype = false,
     this.errorMessage,
   });
 
@@ -47,7 +49,7 @@ class ModelMetadata {
   String get statusDisplay {
     switch (status) {
       case ModelStatus.loaded:
-        return 'Loaded';
+        return isPrototype ? 'Loaded (Untrained Prototype)' : 'Loaded';
       case ModelStatus.unavailable:
         return 'Unavailable';
       case ModelStatus.incompatible:

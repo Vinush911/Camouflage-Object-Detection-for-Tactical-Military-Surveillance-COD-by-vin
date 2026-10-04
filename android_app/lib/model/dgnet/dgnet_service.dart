@@ -106,7 +106,7 @@ class DgnetSegmentationService {
       final inTensor = package.interpreter.getInputTensors()[0];
       final outTensor = package.interpreter.getOutputTensors()[0];
       debugPrint('[DGNet] ========== Model Initialization Summary ==========');
-      debugPrint('[DGNet] Model     : ${config.modelName} (dgnet_s_int8.tflite)');
+      debugPrint('[DGNet] Model     : ${config.modelName}');
       debugPrint('[DGNet] Input     : shape=${inTensor.shape}, type=${inTensor.type}');
       debugPrint('[DGNet] In  quant : scale=${inTensor.params.scale}, zero_point=${inTensor.params.zeroPoint}');
       debugPrint('[DGNet] Output    : shape=${outTensor.shape}, type=${outTensor.type}');

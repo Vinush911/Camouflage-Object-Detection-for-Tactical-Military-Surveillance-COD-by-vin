@@ -4,12 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../core/constants/app_constants.dart';
-import '../detection/target_tracker.dart';
 import '../model/model_registry.dart';
 import '../models/detection_result.dart';
-import '../models/tracked_target.dart';
 import '../services/cod_pipeline_service.dart';
-import '../services/tactical_alert_service.dart';
 import '../utils/app_memory_utils.dart';
 
 enum LiveCameraStatus {
@@ -26,8 +23,6 @@ enum LiveCameraStatus {
 class LiveInferenceController extends ChangeNotifier {
   final CodPipelineService _pipeline;
   final ModelRegistry _registry = ModelRegistry();
-  final TargetTracker _tracker = TargetTracker();
-  final TacticalAlertService _alertService = TacticalAlertService();
 
   CameraController? _cameraController;
   List<CameraDescription> _availableCameras = [];
@@ -40,7 +35,6 @@ class LiveInferenceController extends ChangeNotifier {
 
   // Real-time Detection Outputs
   DetectionResult? _currentResult;
-  List<TrackedTarget> _trackedTargets = [];
   int _frameWidth = 0;
   int _frameHeight = 0;
 
@@ -91,14 +85,12 @@ class LiveInferenceController extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isStreaming => _isStreaming;
   DetectionResult? get currentResult => _currentResult;
-  List<TrackedTarget> get trackedTargets => _trackedTargets;
   int get frameWidth => _frameWidth;
   int get frameHeight => _frameHeight;
 
   double get lastInferenceMs => _lastInferenceMs;
   double get fps => _fps;
   int get ramUsageMb => _ramUsageMb;
-  bool get isAudioMuted => _alertService.isAudioMuted;
 
   double get confidenceThreshold => _confidenceThreshold;
   int get cpuThreads => _cpuThreads;
@@ -200,9 +192,6 @@ class LiveInferenceController extends ChangeNotifier {
   // Stops the camera stream
   Future<void> stopStreaming() async {
     _isStreaming = false;
-    _tracker.reset();
-    _alertService.reset();
-    _trackedTargets = [];
     if (_cameraController != null &&
         _cameraController!.value.isStreamingImages) {
       try {
@@ -256,12 +245,6 @@ class LiveInferenceController extends ChangeNotifier {
         threshold: _confidenceThreshold,
         preprocessingMs: preprocessWatch.elapsedMicroseconds / 1000.0,
       );
-
-      // Run target tracker to smooth box coordinates and assign stable IDs
-      _trackedTargets = _tracker.update(result.regions);
-
-      // Trigger tactical audio ping and haptic pulse for newly confirmed targets
-      _alertService.processTargets(_trackedTargets);
 
       _currentResult = result;
       _lastInferenceMs = result.totalMs;
@@ -391,16 +374,9 @@ class LiveInferenceController extends ChangeNotifier {
     }
   }
 
-  // Toggles acoustic radar ping sound on or off
-  void toggleAudioMute() {
-    _alertService.toggleMute();
-    notifyListeners();
-  }
-
   @override
   void dispose() {
     stopStreaming();
-    _alertService.dispose();
     _cameraController?.dispose();
     super.dispose();
   }

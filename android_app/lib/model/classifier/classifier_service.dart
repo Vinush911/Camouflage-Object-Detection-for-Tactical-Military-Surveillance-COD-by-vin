@@ -21,13 +21,17 @@ class ClassificationBatchResult {
   });
 }
 
-// Service dedicated to classifying detected camouflaged regions (e.g. Soldier, Tank).
+// Service dedicated to classifying detected camouflaged regions (e.g. Non-Target vs Camouflaged Target).
 // If the classifier model is unavailable, it leaves regions unclassified without fabricating fake predictions.
+// When using an untrained prototype, it runs inference on the architecture while clearly marking prototype status.
 
 class TargetClassificationService {
   final ModelRegistry _registry;
   final ClassifierPreprocessor _preprocessor = ClassifierPreprocessor();
   final ClassifierPostprocessor _postprocessor = ClassifierPostprocessor();
+
+  // Flag to log model details once upon first inference
+  bool _hasLoggedModelInfo = false;
 
   TargetClassificationService({ModelRegistry? registry})
       : _registry = registry ?? ModelRegistry();
@@ -35,11 +39,14 @@ class TargetClassificationService {
   ModelMetadata get metadata => _registry.classifierMetadata;
   bool get isAvailable => _registry.isClassifierLoaded;
 
-  // Classifies a list of target regions by cropping each patch from the original image
+  // Classifies a list of target regions using mask-gated 224x224 patches
   Future<ClassificationBatchResult> classifyRegions(
     img.Image originalImage,
-    List<TargetRegion> regions,
-  ) async {
+    List<TargetRegion> regions, {
+    Uint8List? binaryMask,
+    int? maskWidth,
+    int? maskHeight,
+  }) async {
     // If the classification model is not available or there are no regions, return as-is
     if (!_registry.isClassifierLoaded || _registry.classifierPackage == null || regions.isEmpty) {
       debugPrint('[ClassifierService] Classifier is not available or no regions to classify.');
@@ -54,6 +61,20 @@ class TargetClassificationService {
     final interpreter = package.interpreter;
     final config = package.config;
 
+    // Print model status summary once
+    if (!_hasLoggedModelInfo) {
+      _hasLoggedModelInfo = true;
+      final inTensor = interpreter.getInputTensors()[0];
+      final outTensor = interpreter.getOutputTensors()[0];
+      debugPrint('[Classifier] ========== Classifier Model Summary ==========');
+      debugPrint('[Classifier] Model     : ${config.modelName}');
+      debugPrint('[Classifier] Status    : ${config.isPrototype ? 'UNTRAINED PROTOTYPE' : 'TRAINED'}');
+      debugPrint('[Classifier] Input     : shape=${inTensor.shape}, type=${inTensor.type}');
+      debugPrint('[Classifier] Output    : shape=${outTensor.shape}, type=${outTensor.type}');
+      debugPrint('[Classifier] Classes   : ${config.classes.join(', ')}');
+      debugPrint('[Classifier] ===============================================');
+    }
+
     final numClasses = interpreter.getOutputTensors().isNotEmpty
         ? interpreter.getOutputTensors()[0].shape.last
         : (config.classes.isNotEmpty ? config.classes.length : 2);
@@ -62,10 +83,15 @@ class TargetClassificationService {
     final stopwatch = Stopwatch()..start();
 
     for (final region in regions) {
-      // 1. Crop region patch from original image
-      final cropped = RegionExtractor.cropRegion(
+      // 1. Crop mask-gated 224x224 ROI patch with background suppressed
+      final cropped = RegionExtractor.extractMaskGatedRoi(
         originalImage: originalImage,
         region: region,
+        binaryMask: binaryMask,
+        maskWidth: maskWidth ?? 384,
+        maskHeight: maskHeight ?? 384,
+        targetWidth: config.inputWidth,
+        targetHeight: config.inputHeight,
       );
 
       if (cropped == null) {
@@ -73,7 +99,7 @@ class TargetClassificationService {
         continue;
       }
 
-      // 2. Preprocess patch to classifier dimensions
+      // 2. Preprocess patch to classifier dimensions [1, 224, 224, 3]
       final inputTensor = _preprocessor.process(cropped, config);
 
       // 3. Prepare output buffer [1, numClasses]

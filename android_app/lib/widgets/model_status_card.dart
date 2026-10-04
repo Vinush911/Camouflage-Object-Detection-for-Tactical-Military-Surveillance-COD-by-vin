@@ -98,6 +98,41 @@ class ModelStatusCard extends StatelessWidget {
             if (metadata.classes.isNotEmpty)
               _buildRow('Configured Classes', metadata.classes.join(', ')),
 
+            // Notice showing that this is an untrained prototype model
+            if (metadata.isPrototype) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.amber.shade300),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.science_outlined,
+                      size: 16,
+                      color: Colors.amber.shade900,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'CLASSIFIER STATUS: UNTRAINED PROTOTYPE\n'
+                        'Inference pipeline active. Model weights are uncalibrated prototype weights. '
+                        'Ready to swap with trained weights when available.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.amber.shade900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             // Incompatibility warning or error message
             if (metadata.errorMessage != null && !metadata.isLoaded) ...[
               const SizedBox(height: 10),

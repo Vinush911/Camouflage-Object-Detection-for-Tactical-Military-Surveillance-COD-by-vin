@@ -1,21 +1,23 @@
 # Target Classification Model Directory
 
-This directory holds the target classification model and its configuration for classifying detected camouflaged regions (e.g. Soldier, Tank).
+This directory holds the target classification model and its configuration for classifying detected camouflaged regions (Class 0: "Non-Target", Class 1: "Camouflaged Target").
 
-## Expected Files
+## Current Status: TRAINED DEMONSTRATION CLASSIFIER
 
-1. `model.tflite`
-   - TensorFlow Lite model file for target patch classification.
-   - Takes cropped target regions as input (e.g. `[1, 224, 224, 3]`).
-   - Produces class confidence scores / logits corresponding to the classes declared in `model_config.json`.
-   - *Note: If this file is absent, the application gracefully reports "Classification model unavailable" while allowing DGNet segmentation to function fully.*
+- **Model File**: `model.tflite` (exact copy of `classifier_demonstration.tflite`)
+- **Architecture**: EfficientNet-B0 backbone (with ImageNet pretrained weights) + Global Average Pooling + Dropout(0.2) + 2-class Softmax classification head
+- **Training**: Trained on demonstration camouflage patterns (woodland, desert, tactical disruption) vs natural non-target textures
+- **Input Dimensions**: `[1, 224, 224, 3]` (RGB float32 normalized 0.0–1.0)
+- **Output Dimensions**: `[1, 2]` (Softmax class probabilities)
+- **Classes**:
+  - Index 0: `Non-Target`
+  - Index 1: `Camouflaged Target`
+- **Purpose**: Demonstrates the end-to-end DGNet → ROI → Classifier pipeline with learned features, ready to be evaluated in the Flutter app before final production dataset training.
 
-2. `model_config.json`
-   - Configuration file declaring input dimensions, data type, normalization method, and the ordered list of supported class names (e.g., `["Soldier", "Tank"]`).
+## How to Swap for Final Production Trained Classifier
 
-## How to Swap this Model
-
-1. Place your trained TFLite classification model file in this folder.
-2. Rename the model file to `model.tflite`.
-3. Update `model_config.json` with the model's input resolution (e.g. 224x224) and the exact list of output class labels in matching index order.
-4. Rebuild the application (`flutter clean && flutter run`). The application will inspect the runtime tensor shapes and seamlessly begin classifying segmented targets.
+When the final production model is trained:
+1. Place your final trained TFLite classification model file in this folder.
+2. Rename the trained model file to `model.tflite`.
+3. If input dimensions or class labels change, update `model_config.json`.
+4. Rebuild the application (`flutter clean && flutter run`). The application dynamically inspects runtime tensor shapes and uses the new model without needing changes to Dart code.

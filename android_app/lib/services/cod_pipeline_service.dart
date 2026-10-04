@@ -37,17 +37,47 @@ class CodPipelineService {
     );
 
     // If DGNet failed or was unavailable, return its result immediately
-    if (!segResult.isDgnetAvailable || segResult.regions.isEmpty) {
+    if (!segResult.isDgnetAvailable) {
       return segResult;
     }
 
-    // 2. Run target classification on each detected region
+    // If DGNet finds no valid target: do NOT run the classifier
+    if (segResult.regions.isEmpty) {
+      return DetectionResult(
+        originalWidth: segResult.originalWidth,
+        originalHeight: segResult.originalHeight,
+        maskWidth: segResult.maskWidth,
+        maskHeight: segResult.maskHeight,
+        probabilityMask: segResult.probabilityMask,
+        binaryMask: segResult.binaryMask,
+        regions: const [],
+        preprocessingMs: segResult.preprocessingMs,
+        dgnetInferenceMs: segResult.dgnetInferenceMs,
+        postprocessingMs: segResult.postprocessingMs,
+        classificationInferenceMs: 0.0,
+        totalMs: segResult.totalMs,
+        isDgnetAvailable: true,
+        isClassifierAvailable: classifierService.isAvailable,
+        statusMessage: 'No target detected',
+      );
+    }
+
+    // 2. If valid targets were found, run classifier on mask-gated ROIs
     final classResult = await classifierService.classifyRegions(
       inputImage,
       segResult.regions,
+      binaryMask: segResult.binaryMask,
+      maskWidth: segResult.maskWidth,
+      maskHeight: segResult.maskHeight,
     );
 
     final combinedTotalMs = segResult.totalMs + classResult.elapsedMilliseconds;
+
+    // Check if classifier is an untrained prototype or trained model
+    final isProto = classifierService.metadata.isPrototype;
+    final statusMsg = classResult.isExecuted
+        ? (isProto ? 'Target detected (Classifier: UNTRAINED PROTOTYPE)' : null)
+        : 'Classification model unavailable.';
 
     return DetectionResult(
       originalWidth: segResult.originalWidth,
@@ -64,9 +94,7 @@ class CodPipelineService {
       totalMs: combinedTotalMs,
       isDgnetAvailable: segResult.isDgnetAvailable,
       isClassifierAvailable: classResult.isExecuted,
-      statusMessage: classResult.isExecuted
-          ? null
-          : 'Classification model unavailable.',
+      statusMessage: statusMsg,
     );
   }
 
@@ -106,11 +134,20 @@ class CodPipelineService {
       final classResult = await classifierService.classifyRegions(
         originalImage,
         finalRegions,
+        binaryMask: newBinaryMask,
+        maskWidth: existingResult.maskWidth,
+        maskHeight: existingResult.maskHeight,
       );
       finalRegions = classResult.regions;
       classificationMs = classResult.elapsedMilliseconds;
       isClassified = classResult.isExecuted;
     }
+
+    final String? statusMsg = finalRegions.isEmpty
+        ? 'No target detected'
+        : (isClassified && classifierService.metadata.isPrototype
+            ? 'Target detected (Classifier: UNTRAINED PROTOTYPE)'
+            : null);
 
     return DetectionResult(
       originalWidth: existingResult.originalWidth,
@@ -130,6 +167,7 @@ class CodPipelineService {
           classificationMs,
       isDgnetAvailable: true,
       isClassifierAvailable: isClassified,
+      statusMessage: statusMsg,
     );
   }
 }
